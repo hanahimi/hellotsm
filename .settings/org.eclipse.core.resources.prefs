@@ -2,3 +2,5 @@ eclipse.preferences.version=1
 encoding//src/data/dataset.py=UTF-8
 encoding//src/data/feature.py=UTF-8
 encoding//src/data/pose.py=UTF-8
+encoding//src/tsm/sem_map.py=UTF-8
+encoding//src/util/dataio.py=UTF-8

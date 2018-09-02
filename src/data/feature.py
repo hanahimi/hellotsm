@@ -26,7 +26,11 @@ class Feature:
         
         self.x = 0      # 自车X坐标
         self.y = 0      # 自车Y坐标
-        
+
+    
+    def __repr__(self):
+        return "%2.3f m, %2.3f d %2.2f  %2.2f" % (self.d, np.rad2deg(self.theta), self.x, self.y)
+    
     def parse(self, pose, hist_l, hist_c, hist_r, acc_veh_odm):
         """
         将一幅语义分割直方图及对应位置，解析为特征值
@@ -44,7 +48,37 @@ class Feature:
         self.h_r[:] = hist_r[:]
         
         self.d = acc_veh_odm
-        
+    
+    def __add__(self, other):
+        """ addition of two featues
+        """
+        new_feat = Feature()
+        new_feat.d = self.d + other.d
+        ta = self.d*np.sin(self.theta) + other.d*np.sin(other.theta)
+        tb = self.d*np.cos(self.theta) + other.d*np.cos(other.theta)
+
+#         new_feat.theta = np.arctan(ta/tb)    # 原文版本角度融合公式（-90~90）
+
+        tn = np.sqrt(ta**2 + tb**2)
+        ta = ta / tn
+        tb = tb / tn
+        tb = np.clip(tb, -1.0, 1.0)
+        new_feat.theta = np.arccos(tb) * (-1.0 if ta < 0 else 1.0)
+
+        new_feat.h_l = (self.d * self.h_l + other.d * other.h_l) / (self.d + other.d)
+        new_feat.h_c = (self.d * self.h_c + other.d * other.h_c) / (self.d + other.d)
+        new_feat.h_r = (self.d * self.h_r + other.d * other.h_r) / (self.d + other.d)
+        return new_feat
+    
+    def __sub__(self, other):
+        """ distance of two featues
+        """
+        d_h_l = 1. - np.dot(self.h_l, other.h_l) / (np.sqrt(np.sum(self.h_l**2) * np.sum(other.h_l**2)))
+        d_h_c = 1. - np.dot(self.h_c, other.h_c) / (np.sqrt(np.sum(self.h_c**2) * np.sum(other.h_c**2)))
+        d_h_r = 1. - np.dot(self.h_r, other.h_r) / (np.sqrt(np.sum(self.h_r**2) * np.sum(other.h_r**2)))
+        return np.max([d_h_l, d_h_c, d_h_r])
+    
+    
 def load_label_img(png_path):
     """ 读入一副语义分割图片，将其中像素解析为等分3个区域的语义统计直方图
         reference：Readme_deeploc
@@ -52,7 +86,7 @@ def load_label_img(png_path):
     sem_img = cv2.imread(png_path)[:,:,0]
     h, w = sem_img.shape
     ww = int(w/3)
-    k = 2   # 采样步长
+    k = 3   # 采样步长
     new_szie = int(h * ww / (k*k) )
     img_l = np.reshape(sem_img[::k,  0:ww:k], (new_szie))
     img_c = np.reshape(sem_img[::k,  ww:2*ww:k], (new_szie))
@@ -69,8 +103,21 @@ def load_label_img(png_path):
     return hist_l, hist_c, hist_r
     
 def main():
-    png_path = r"F:\dataset\DeepLoc\semantic\ts_seq1\labels\Image_1.png"
-    hist_l, hist_c, hist_r = load_label_img(png_path)
+#     png_path = r"F:\dataset\DeepLoc\semantic\ts_seq1\labels\Image_1.png"
+#     hist_l, hist_c, hist_r = load_label_img(png_path)
+    f1 = Feature()
+    f1.d = 1
+    f1.theta = np.deg2rad(-90)
+    
+    f2 = Feature()
+    f2.d = 1
+    f2.theta = np.deg2rad(-90)
+    
+    f3 = f1 + f2
+    print(f1)
+    print(f2)
+    print(f3)
+
     
 if __name__=="__main__":
     pass
@@ -80,7 +127,18 @@ if __name__=="__main__":
 
 
 
-
+"""
+1 木兰回家坐飞机
+2 鹅鹅曲项向天歌
+3 东篱悠然见南山
+4 南朝四百八十寺
+5 武松上山打老虎
+6 
+7 鲁达拳打镇关西
+8 隔江犹爆后庭花
+9 劝君更尽一杯酒
+10 却话巴山夜雨时
+"""
 
 
 
