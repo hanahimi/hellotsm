@@ -1,6 +1,6 @@
-#-*-coding:UTF-8-*-
+#-*-coding:UTF-8
 '''
-Created on 2018Äê8ÔÂ28ÈÕ
+Created on 2018å¹´8æœˆ28æ—¥
 @author: mipapapa
 '''
 import numpy as np
@@ -9,49 +9,58 @@ import cv2
 N_SEMATIC_CLASS = 10
 
 class Feature:
-    """ µ¥·ùÓïÒå·Ö¸îÍ¼ÏñµÄÌáÈ¡Ñ¶Ï¢, µ±Ç°Ö¡
+    """ å•å¹…è¯­ä¹‰åˆ†å‰²å›¾åƒçš„æå–è®¯æ¯, å½“å‰å¸§
     Attribes: 
-        d: float,³µÁ¾Àï³Ì¼ÆÀÛ»ı¾àÀë
-        theta: float,³µÁ¾º½Ïò½Ç¶È
-        h_l: array, ÓïÒåÍ¼Ïñ×ó²à²¿·ÖÖ±·½Í¼ÌØÕ÷
-        h_c: array, ÓïÒåÍ¼ÏñÖĞ¼ä²¿·ÖÖ±·½Í¼ÌØÕ÷
-        h_r: array, ÓïÒåÍ¼ÏñÓÒ²à²¿·ÖÖ±·½Í¼ÌØÕ÷
+        d: float,è½¦è¾†é‡Œç¨‹è®¡ç´¯ç§¯è·ç¦»
+        theta: float,è½¦è¾†èˆªå‘è§’åº¦
+        h_l: array, è¯­ä¹‰å›¾åƒå·¦ä¾§éƒ¨åˆ†ç›´æ–¹å›¾ç‰¹å¾
+        h_c: array, è¯­ä¹‰å›¾åƒä¸­é—´éƒ¨åˆ†ç›´æ–¹å›¾ç‰¹å¾
+        h_r: array, è¯­ä¹‰å›¾åƒå³ä¾§éƒ¨åˆ†ç›´æ–¹å›¾ç‰¹å¾
     """
     def __init__(self):
-        self.d = 0
-        self.theta = 0
-        self.h_l = np.zeros((N_SEMATIC_CLASS))
-        self.h_c = np.zeros((N_SEMATIC_CLASS))
-        self.h_r = np.zeros((N_SEMATIC_CLASS))
-    
-    def parse(self, pose, semantic_img):
+        self.d = 0      # æœ€è¿‘çš„ç´¯ç§¯é‡Œç¨‹æ•°(M)
+        self.theta = 0  # å½“å‰è½¦è¾†æœå‘(RAD)
+        self.h_l = np.zeros((N_SEMATIC_CLASS))  # å·¦ä¾§è¯­ä¹‰ç›´æ–¹å›¾
+        self.h_c = np.zeros((N_SEMATIC_CLASS))  # ä¸­ä¾§è¯­ä¹‰ç›´æ–¹å›¾
+        self.h_r = np.zeros((N_SEMATIC_CLASS))  # å³ä¾§è¯­ä¹‰ç›´æ–¹å›¾
+        
+        self.x = 0      # è‡ªè½¦Xåæ ‡
+        self.y = 0      # è‡ªè½¦Yåæ ‡
+        
+    def parse(self, pose, hist_l, hist_c, hist_r, acc_veh_odm):
         """
-        ½«Ò»·ùÓïÒå·Ö¸îÍ¼Ïñ¼°¶ÔÓ¦Î»ÖÃ£¬½âÎöÎªÌØÕ÷Öµ
+        å°†ä¸€å¹…è¯­ä¹‰åˆ†å‰²ç›´æ–¹å›¾åŠå¯¹åº”ä½ç½®ï¼Œè§£æä¸ºç‰¹å¾å€¼
         Params:
-            pose: LocPose, ³µÁ¾6×ÔÓÉ¶ÈÎ»×ËĞÅÏ¢
-            sematic_img: ndarray2D: ÓïÒå·Ö¸î½á¹ûÍ¼Ïñ£¨²ÎÕÕReadme_deeploc£©
+            pose: LocPose, è½¦è¾†6è‡ªç”±åº¦ä½å§¿ä¿¡æ¯
+            img_l, img_c, img_r: ndarray1D: è¯­ä¹‰ç›´æ–¹å›¾ï¼ˆä½¿ç”¨load_label_imgè·å¾—ï¼‰
+            acc_veh_odm: ä»èµ·å§‹åˆ°å½“å‰å¸§çš„ç´¯ç§¯é‡Œç¨‹è®¡(m)
         """
         self.theta = pose.data[3]
-        h, w = semantic_img.shape
-        ww = int(w/3)
-        img_l = semantic_img[:,  0:ww]
-        img_c = semantic_img[:,  ww:2*ww]
-        img_r = semantic_img[:,  2*ww:3*ww]
+        self.x = pose.data[0]
+        self.y = pose.data[1]
         
-
+        self.h_l[:] = hist_l[:]
+        self.h_c[:] = hist_c[:]
+        self.h_r[:] = hist_r[:]
+        
+        self.d = acc_veh_odm
+        
 def load_label_img(png_path):
+    """ è¯»å…¥ä¸€å‰¯è¯­ä¹‰åˆ†å‰²å›¾ç‰‡ï¼Œå°†å…¶ä¸­åƒç´ è§£æä¸ºç­‰åˆ†3ä¸ªåŒºåŸŸçš„è¯­ä¹‰ç»Ÿè®¡ç›´æ–¹å›¾
+        referenceï¼šReadme_deeploc
+    """
     sem_img = cv2.imread(png_path)[:,:,0]
     h, w = sem_img.shape
     ww = int(w/3)
-    k = 2   # ²ÉÑù²½³¤
-    new_szie = h * ww /(k*k)
+    k = 2   # é‡‡æ ·æ­¥é•¿
+    new_szie = int(h * ww / (k*k) )
     img_l = np.reshape(sem_img[::k,  0:ww:k], (new_szie))
     img_c = np.reshape(sem_img[::k,  ww:2*ww:k], (new_szie))
     img_r = np.reshape(sem_img[::k,  2*ww:3*ww:k], (new_szie))
     
-    hist_l = np.zeros((N_SEMATIC_CLASS), np.float16)
-    hist_c = np.zeros((N_SEMATIC_CLASS), np.float16)
-    hist_r = np.zeros((N_SEMATIC_CLASS), np.float16)
+    hist_l = np.zeros((N_SEMATIC_CLASS), np.uint32)
+    hist_c = np.zeros((N_SEMATIC_CLASS), np.uint32)
+    hist_r = np.zeros((N_SEMATIC_CLASS), np.uint32)
     
     for i in range(new_szie):
         hist_l[img_l[i]] += 1
@@ -60,10 +69,18 @@ def load_label_img(png_path):
     return hist_l, hist_c, hist_r
     
 def main():
-    png_path = r"D:\Dataset\public_data\DeepLoc\train\labels\Image_1.png"
-    load_label_img(png_path)
+    png_path = r"F:\dataset\DeepLoc\semantic\ts_seq1\labels\Image_1.png"
+    hist_l, hist_c, hist_r = load_label_img(png_path)
     
 if __name__=="__main__":
     pass
     main()
+
+
+
+
+
+
+
+
 
