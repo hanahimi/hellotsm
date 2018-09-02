@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 
 def load_feat_dataset(data_dir):
+    
     labels = os.path.join(data_dir, "labels")
     label_imgs = get_filelist(labels,".png")
     poses = load_pose(os.path.join(data_dir, "poses.txt"))
@@ -47,15 +48,13 @@ def load_feature_npy(npy_file):
     return seg_feature_dataset
 
 def main():
-    data_dir = r"F:\dataset\DeepLoc\semantic\ts_seq1"
+    data_dir = r"D:\work\ts_seq1"
 #     seg_feature_dataset = load_feat_dataset(data_dir)
 #     print(len(seg_feature_dataset))
-    
     npy_file = os.path.join(data_dir, "feature.npy")
 #     np.save(npy_file, seg_feature_dataset)
     seg_feature_dataset = load_feature_npy(npy_file)
     print(len(seg_feature_dataset))
-    print(seg_feature_dataset[0])
 
 
 if __name__=="__main__":
