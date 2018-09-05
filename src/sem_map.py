@@ -38,7 +38,7 @@ class SemaObservation:
         self.fso = None
         self.n = 0
         self.Nf = 5    # 最大相似特征累计次数
-        self.FEAT_DIST_THS = 100    # 特征差异阈值
+        self.FEAT_DIST_THS = 0.05    # 特征差异阈值
     
     def new_semanitic_observation(self, img_pose_feat):
         Ft = Feature()
@@ -53,6 +53,7 @@ class SemaObservation:
             self.n = 1
         else:
             d = self.fso - img_pose_feat
+            print(d, self.n)
             if d < self.FEAT_DIST_THS and self.n < self.Nf:
                 self.fso = self.fso + img_pose_feat
                 self.n += 1
@@ -88,10 +89,14 @@ class TSM:
 
 def main():
     from dataset import load_feature_npy
-    load_feature_npy(r"dataset/ts_seq1_feature.npy")
+    feature_lst = load_feature_npy(r"dataset/ts_seq1_feature.npy")
 
-
-
+    sov = SemaObservation()
+    for t in range(len(feature_lst)):
+        F_t = feature_lst[t]
+        sov.input(F_t)
+    
+    
 if __name__=="__main__":
     pass
     main()
