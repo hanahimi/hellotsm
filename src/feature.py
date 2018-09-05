@@ -78,6 +78,15 @@ class Feature:
         d_h_r = 1. - np.dot(self.h_r, other.h_r) / (np.sqrt(np.sum(self.h_r**2) * np.sum(other.h_r**2)))
         return np.max([d_h_l, d_h_c, d_h_r])
     
+    def copy(self, other):
+        self.theta = other.theta
+        self.x = other.x
+        self.y = other.y
+        self.h_l[:] = other.h_l[:]
+        self.h_c[:] = other.h_c[:]
+        self.h_r[:] = other.h_r[:]
+        self.d = other.d
+        
     
 def load_label_img(png_path):
     """ 读入一副语义分割图片，将其中像素解析为等分3个区域的语义统计直方图

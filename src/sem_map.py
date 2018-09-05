@@ -3,6 +3,8 @@
 Created on 2018年9月2日-下午5:41:45
 author: Gary-W
 基于feature构建的拓扑地图模块
+
+
 '''
 import numpy as np
 from feature import Feature, N_SEMATIC_CLASS
@@ -29,11 +31,42 @@ class Node:
         self.edges_end = []     # 所有以该节点为终点的边
 
 
+class SemaObservation:
+    """ 计算融合语义观测向量 F_SO
+    """
+    def __init__(self):
+        self.fso = None
+        self.n = 0
+        self.Nf = 5    # 最大相似特征累计次数
+        self.FEAT_DIST_THS = 100    # 特征差异阈值
+    
+    def new_semanitic_observation(self, img_pose_feat):
+        Ft = Feature()
+        Ft.copy(img_pose_feat)
+        return Ft
+    
+    def process(self, img_pose_feat):
+        """ 输入图像/位置特征 F(t), 尝试与F_SO(t-1) 进行融合
+        """
+        if not self.fso:
+            self.fso = img_pose_feat
+            self.n = 1
+        else:
+            d = self.fso - img_pose_feat
+            if d < self.FEAT_DIST_THS and self.n < self.Nf:
+                self.fso = self.fso + img_pose_feat
+                self.n += 1
+            else:
+                self.fso = self.new_semanitic_observation(img_pose_feat)
+                self.n = 1
+        return self.fso
+    
+            
 class TSM:
     def __init__(self):
 
         self.FEAT_DIST_THS = 100    # 特征差异阈值
-        self.MAX_SIM_ACC_CNT = 5    # 最大相似特征合并次数
+        self.MAX_SIM_ACC_CNT = 5    # 最大相似特征累计次数
         self._tmp_sim_acc_cnt = 0
         
     def observation(self, feat_cur):

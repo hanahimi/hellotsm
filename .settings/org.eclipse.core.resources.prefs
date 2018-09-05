@@ -1,5 +1,6 @@
 eclipse.preferences.version=1
 encoding//src/dataset.py=UTF-8
+encoding//src/demo.py=UTF-8
 encoding//src/feature.py=UTF-8
 encoding//src/graph.py=UTF-8
 encoding//src/pose.py=UTF-8

@@ -23,13 +23,12 @@ def load_feat_dataset(data_dir):
         img_name_dict[img_name] = label_imgs[i]
     
     seg_feature_dataset = []
-    acc_veh_odm = 0
     cnt, step = 0, 1
     for i in tqdm(range(len(poses))):
         pose = poses[i]
         if i == 0:
             x_last, y_last = pose.data[0], pose.data[1]
-        acc_veh_odm += np.sqrt((pose.data[0] - x_last)**2 + (pose.data[1] - y_last)**2)
+        acc_veh_odm = np.sqrt((pose.data[0] - x_last)**2 + (pose.data[1] - y_last)**2)
         x_last, y_last = pose.data[0], pose.data[1]
         if pose.name in img_name_dict:
             if cnt % step == 0:
@@ -48,11 +47,11 @@ def load_feature_npy(npy_file):
     return seg_feature_dataset
 
 def main():
-    data_dir = r"D:\work\ts_seq1"
-#     seg_feature_dataset = load_feat_dataset(data_dir)
-#     print(len(seg_feature_dataset))
+    data_dir = r"D:\Dataset\public_data\DeepLoc\tsm_demo\ts_seq1"
+    seg_feature_dataset = load_feat_dataset(data_dir)
+    print(len(seg_feature_dataset))
     npy_file = os.path.join(data_dir, "feature.npy")
-#     np.save(npy_file, seg_feature_dataset)
+    np.save(npy_file, seg_feature_dataset)
     seg_feature_dataset = load_feature_npy(npy_file)
     print(len(seg_feature_dataset))
 
