@@ -45,7 +45,7 @@ class SemaObservation:
         Ft.copy(img_pose_feat)
         return Ft
     
-    def process(self, img_pose_feat):
+    def input(self, img_pose_feat):
         """ 输入图像/位置特征 F(t), 尝试与F_SO(t-1) 进行融合
         """
         if not self.fso:
@@ -88,8 +88,6 @@ class TSM:
 
 def main():
     from dataset import load_feature_npy
-
-    tsm = TSM()
     load_feature_npy(r"dataset/ts_seq1_feature.npy")
 
 
