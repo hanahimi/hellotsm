@@ -68,6 +68,11 @@ class Feature:
         new_feat.h_l = (self.d * self.h_l + other.d * other.h_l) / (self.d + other.d)
         new_feat.h_c = (self.d * self.h_c + other.d * other.h_c) / (self.d + other.d)
         new_feat.h_r = (self.d * self.h_r + other.d * other.h_r) / (self.d + other.d)
+        
+        # 使用右值的坐标作为新特征的坐标
+        new_feat.x = other.x
+        new_feat.y = other.y
+        
         return new_feat
     
     def __sub__(self, other):
@@ -77,6 +82,14 @@ class Feature:
         d_h_c = 1. - np.dot(self.h_c, other.h_c) / (np.sqrt(np.sum(self.h_c**2) * np.sum(other.h_c**2)))
         d_h_r = 1. - np.dot(self.h_r, other.h_r) / (np.sqrt(np.sum(self.h_r**2) * np.sum(other.h_r**2)))
         return np.max([d_h_l, d_h_c, d_h_r])
+    
+    def __mod__(self, other):
+        """ 计算角度差绝对值
+            返回角度值
+        """
+        r = np.cos(self.theta)*np.cos(other.theta)+np.sin(self.theta)*np.sin(other.theta)
+        r = np.clip(r, -1.0, 1.0)
+        return np.rad2deg(np.arccos(r))
     
     def copy(self, other):
         self.theta = other.theta
@@ -134,20 +147,6 @@ if __name__=="__main__":
 
 
 
-
-
-"""
-1 木兰回家坐飞机
-2 鹅鹅曲项向天歌
-3 东篱悠然见南山
-4 南朝四百八十寺
-5 武松上山打老虎
-6 
-7 鲁达拳打镇关西
-8 隔江犹爆后庭花
-9 劝君更尽一杯酒
-10 却话巴山夜雨时
-"""
 
 
 
