@@ -5,6 +5,7 @@ author: Gary-W
 基于feature构建的拓扑地图模块
 '''
 from feature import Feature
+import random
 
 class SemaObservation:
     """ 计算融合语义观测向量 F_SO
@@ -163,8 +164,14 @@ class TSM:
         m_last = self.edges[-1]
         edge_end = self.nodes[-1]
         self.__connect_nen(edge_end, m_last, node_start)
-
-
+    
+    
+    def random_edge(self):
+        """ 根据以建好后的TSM，随机返回一个边的id
+        """
+        rand_edge_id = int(random.random() * len(self.edges))
+        return rand_edge_id
+        
 def main():
     from dataset import load_feature_npy
     from display import plotTSM
