@@ -77,7 +77,7 @@ class TSM:
         self.edges = []
         self.nodes = []
     
-        self.MAPPING_THS = 0.05     # 特征距离匹配阈值
+        self.MAPPING_THS = 0.02     # 特征距离匹配阈值
         self.ORIENT_DIFF_THS = 5    # 角度变化阈值(deg)
         
     def show_TSM(self):
@@ -167,8 +167,7 @@ class TSM:
 
 def main():
     from dataset import load_feature_npy
-    import networkx as nx 
-    import matplotlib.pyplot as plt 
+    from display import plotTSM
     
     feature_lst = load_feature_npy(r"dataset/ts_seq1_feature.npy")
 
@@ -180,22 +179,9 @@ def main():
         tsm.mapping(fso)
     tsm.close_looping()
     
-#     tsm.show_TSM()
-#     
-#     # 有向图描画
-#     DG = nx.DiGraph()
-#     # 添加节点
-#     for i in range(len(tsm.nodes)):
-#         DG.add_nodes_from(str(tsm.nodes[i].id))
-#     #添加边，数据格式为列表 
-#     for i in range(len(tsm.edges)):
-#         print(str(tsm.edges[i].starting_node_id), str(tsm.edges[i].ending_node_id))
-#               
-#         DG.add_edges_from([(str(tsm.edges[i].starting_node_id), 
-#                            str(tsm.edges[i].ending_node_id))])
-# 
-#     nx.draw(DG,with_labels=True, node_size=100) 
-#     plt.show()
+    plotTSM(tsm)
+
+    
     
 if __name__=="__main__":
     pass
