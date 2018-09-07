@@ -10,12 +10,13 @@ import random
 class SemaObservation:
     """ 计算融合语义观测向量 F_SO
     """
-    def __init__(self):
+    def __init__(self, nf=5, feat_dist=0.05, orient_diff_ths=5):
         self.fso = None
         self.n = 0
-        self.Nf = 5    # 最大相似特征累计次数
-        self.FEAT_DIST_THS = 0.05    # 特征差异阈值
-    
+        self.Nf = nf                        # 最大相似特征累计次数
+        self.FEAT_DIST_THS = feat_dist      # 特征差异阈值
+        self.ORIENT_DIFF_THS = orient_diff_ths    # 角度变化阈值(deg)
+        
     def new_semanitic_observation(self, img_pose_feat):
         Ft = Feature()
         Ft.copy(img_pose_feat)
@@ -27,16 +28,19 @@ class SemaObservation:
         if not self.fso:
             self.fso = img_pose_feat
             self.n = 1
+
         else:
             d = self.fso - img_pose_feat
-            if d < self.FEAT_DIST_THS and self.n < self.Nf:
+            dtheta = self.fso % img_pose_feat
+            if d < self.FEAT_DIST_THS and self.n < self.Nf and dtheta < self.ORIENT_DIFF_THS:
                 self.fso = self.fso + img_pose_feat
                 self.n += 1
+
             else:
                 self.fso = self.new_semanitic_observation(img_pose_feat)
                 self.n = 1
-
-        return self.fso
+        
+        return self.fso, self.n
 
 class Edge(Feature):
     """ Edge用于表示一段道路的区域
@@ -48,13 +52,11 @@ class Edge(Feature):
     def __init__(self, _id=0):
         Feature.__init__(self)
         self.id = _id         # Edge_ID（用于显示）
-        self.feature = Feature()
-        
         self.starting_node_id = -1
         self.ending_node_id = -1
     
     def __repr__(self):
-        return "E_id:%d, sn:%d, en:%d" % (self.id, self.starting_node_id, self.ending_node_id)
+        return "E:(%d),L:%2.3f sn:%d, en:%d" % (self.id, self.d, self.starting_node_id, self.ending_node_id)
 
 class Node:
     """ Node用于表示两条Edge之间的相交和连接（可以认为是路的节点）
@@ -67,9 +69,9 @@ class Node:
         self.y = 0
         
     def __repr__(self):
-        return "N_id:%d, es:%s, ee:%s" % (self.id, 
-                                          str(self.edges_from_this), 
-                                          str(self.edges_to_this))
+        return "N_id:%d, x:%2.2f y:%2.2f fes:%s, ee:%s" % (self.id, self.x, self.y,
+                                                          str(self.edges_from_this), 
+                                                          str(self.edges_to_this))
             
 class TSM:
     """ Topological Semantic Mapping
@@ -78,9 +80,6 @@ class TSM:
         self.edges = []
         self.nodes = []
     
-        self.MAPPING_THS = 0.02     # 特征距离匹配阈值
-        self.ORIENT_DIFF_THS = 5    # 角度变化阈值(deg)
-        
     def show_TSM(self):
         print("tms data")
         for i in range(len(self.nodes)):
@@ -128,7 +127,7 @@ class TSM:
             node.edges_from_this.append(out_edge.id)
     
     
-    def mapping(self, fso):
+    def mapping(self, fso, nfuse):
         """ 根据新的特征观测，对TSM进行更新
         """
         if not self.edges and not self.nodes:
@@ -141,22 +140,21 @@ class TSM:
             
         else:
             m_last = self.edges[-1]
-            dhist = m_last - fso
-            dtheta = m_last % fso
-             
-            if dhist < self.MAPPING_THS and dtheta < self.ORIENT_DIFF_THS:
-                m_last_tmp = m_last + fso
-                m_last.copy(m_last_tmp)
- 
-            else:
+            
+            if nfuse == 1:
                 new_node = self.__new_node()
                 new_node.x = fso.x
                 new_node.y = fso.y
-                
+                 
                 self.__connect_ene(m_last, new_node)
                 m_last = self.__new_edge(fso)
                 self.__connect_nen(new_node, m_last)
-    
+            
+            else:
+                m_last_tmp = m_last + fso
+                m_last.copy(m_last_tmp)
+                m_last.d = fso.d        # 修正边长为最新fso的累计边长
+                
     def close_looping(self):
         """ 手动close_looping, 需要车辆回到出发起点
         """

@@ -17,7 +17,9 @@ class Vehile:
     """ 车辆的位置由TSM对应的边，以及在这条边上的1D行驶里程表示
     """
     def __init__(self, edges_num=10):
-        self.edge_id = int(random.random() * edges_num)
+#         self.edge_id = int(random.random() * edges_num)
+        self.edge_id = 0
+        
         self.odometry = 0
         self.forward_noise = 0.0
         self.k = 1.0    # 角度误差增益
@@ -54,7 +56,7 @@ class Vehile:
         forward_distance: 车辆前进的距离
         gtsm: 已知地图
         """
-        self.forward_noise = forward_distance*forward_distance
+#         self.forward_noise = forward_distance*forward_distance
         distance = random.gauss(forward_distance, self.forward_noise)
         self.odometry += distance
         # 获取当前车辆对应的边缘
@@ -63,21 +65,24 @@ class Vehile:
         if 0 <= self.odometry <= cur_edge.d:
             # 当新的里程累计数位于边的内部， 维持当前车辆的边
             self.edge_id = self.edge_id
+            print("case1: O:%2.2f E:%d" % (self.odometry, self.edge_id))
             
         elif self.odometry > cur_edge.d:
             # 当新的里程超越对应边时， 从当前边终点的节点中，随机选择一条出边
             tmp_len = gtsm.edges[self.edge_id].d
             while self.odometry > tmp_len:
                 ending_node = gtsm.nodes[gtsm.edges[self.edge_id].ending_node_id]
-                self.edge_id = int(random.random()*len(ending_node.edges_from_this))
+                self.edge_id = random.choice(ending_node.edges_from_this)
                 self.odometry -= tmp_len
                 tmp_len = gtsm.edges[self.edge_id].d
+                print("case2: O:%2.2f E:%d" % (self.odometry, self.edge_id))
+            
         else:
             # 当新的里程落后对应边时， 从当前边起点的节点中，随机选择一条入边
             tmp_len = gtsm.edges[self.edge_id].d
             while self.odometry < 0:
                 starting_node = gtsm.nodes[gtsm.edges[self.edge_id].starting_node_id]
-                self.edge_id = int(random.random()*len(starting_node.edges_to_this))
+                self.edge_id = random.choice(starting_node.edges_to_this)
                 self.odometry += tmp_len
                 tmp_len = gtsm.edges[self.edge_id].d
             self.odometry = tmp_len - self.odometry     # 转换为以对应边起点的里程数

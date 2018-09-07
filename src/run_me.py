@@ -12,29 +12,49 @@ from vehicle import Vehile
 
 
 def main():
+    
     # 建立全局语义地图GTSM
     feature_tsm = load_feature_npy(r"dataset/ts_seq1_feature.npy")
     gtsm = TSM()
-    sov = SemaObservation()
+    sov = SemaObservation(nf=5, feat_dist=0.1, orient_diff_ths=10)
+    
     for t in range(len(feature_tsm)):
         Ft = feature_tsm[t]
-        fso = sov.input(Ft)
-        gtsm.mapping(fso)
+        fso, nfuse = sov.input(Ft)
+        gtsm.mapping(fso, nfuse)
+    
+    d_sum = 0
+    for i in range(len(gtsm.edges)):
+        d_sum += gtsm.edges[i].d
+    print(d_sum)
     gtsm.close_looping()
-#     plotTSM(tsm)
 
+#     gtsm.show_TSM()
+#     plotTSM(gtsm)
+    
     # 载入观测数据，基于车辆模型（观测，更新，评估）与粒子滤波器进行位置迭代更新
     feature_loc = load_feature_npy(r"dataset/ts_seq1_feature.npy")
     
-    myrobot = Vehile()
-    
-    for t in range(len(feature_loc)):
-        Ft = feature_loc[t]
-        Z = myrobot.sense(Ft)
-        
+    myrobot = Vehile(len(gtsm.edges))
+#     myrobot.set_noise(0.3)
+#     for t in range(len(feature_loc)):
+#         Ft = feature_loc[t]
+#         Z = myrobot.sense(Ft)
+#         forward_distance = Z.d
+#         myrobot.move(forward_distance, gtsm)
+
+
     
     
 if __name__=="__main__":
     pass
     main()
+# sum d: 158.227781536
+
+
+
+
+
+
+
 
