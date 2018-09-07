@@ -85,11 +85,11 @@ class Feature:
     
     def __mod__(self, other):
         """ 计算角度差绝对值
-            返回角度值
+            返回弧度值
         """
-        r = np.cos(self.theta)*np.cos(other.theta)+np.sin(self.theta)*np.sin(other.theta)
+        r = np.cos(self.theta)*np.cos(other.theta) + np.sin(self.theta)*np.sin(other.theta)
         r = np.clip(r, -1.0, 1.0)
-        return np.rad2deg(np.arccos(r))
+        return np.arccos(r)
     
     def copy(self, other):
         self.theta = other.theta

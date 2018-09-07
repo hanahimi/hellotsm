@@ -44,10 +44,26 @@ def load_feat_dataset(data_dir):
 def load_feature_npy(npy_file):
     # 只要数据结构不变即可，feature的方法修改不影响npy的恢复
     seg_feature_dataset = np.load(npy_file)
-    return seg_feature_dataset
+    
+    # 对数据的角度进行修正，使用位置点进行关联，使用之前的角度
+    n = len(seg_feature_dataset)
+    for i in range(n-1):
+        f0 = seg_feature_dataset[i]
+        f1 = seg_feature_dataset[i+1]
+        dx = f1.x - f0.x
+        dy = f1.y - f0.y
+        n = np.sqrt(dx**2 + dy**2)
+        dx /= n
+        dy /= n
+        theta = np.arccos(dy)
+        if dx < 0:
+            theta *= -1
+        seg_feature_dataset[i].theta = theta
+        
+    return seg_feature_dataset[:-1]
 
 def main():
-    data_dir = r"D:\Dataset\public_data\DeepLoc\tsm_demo\ts_seq1"
+    data_dir = r"D:\Dataset\public_data\DeepLoc\tsm_demo\tr_seq1"
     seg_feature_dataset = load_feat_dataset(data_dir)
     print(len(seg_feature_dataset))
     npy_file = os.path.join(data_dir, "feature.npy")

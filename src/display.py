@@ -8,7 +8,7 @@ TSM显示模块
 2 
 '''
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def plotTSM(tsm):
     fig = plt.figure()
@@ -19,16 +19,23 @@ def plotTSM(tsm):
     for i in range(len(tsm.nodes)):
         node = tsm.nodes[i]
         plt.scatter(node.x, node.y, s=40, alpha=1.0)
-    
+        plt.text(node.x, node.y, str(i))
+        
     for i in range(len(tsm.edges)):
         edge = tsm.edges[i]
         if edge.starting_node_id == -1 or edge.ending_node_id == -1:
             continue
         n0 = tsm.nodes[edge.starting_node_id]
         n1 = tsm.nodes[edge.ending_node_id]
-        ax.arrow(n0.x, n0.y, n1.x-n0.x, n1.y-n0.y, 
+        
+        # 显示边的角度
+        ax.arrow(n0.x, n0.y, np.sin(edge.theta), np.cos(edge.theta), 
                  head_width=0.8, head_length=0.8, 
                  fc='b', ec='r', alpha=0.9)
+        
+#         ax.arrow(n0.x, n0.y, n1.x-n0.x, n1.y-n0.y, 
+#                  head_width=0.8, head_length=0.8, 
+#                  fc='b', ec='r', alpha=0.9)
     
     plt.show()
 

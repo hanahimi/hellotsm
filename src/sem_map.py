@@ -6,6 +6,7 @@ author: Gary-W
 '''
 from feature import Feature
 import random
+import numpy as np
 
 class SemaObservation:
     """ 计算融合语义观测向量 F_SO
@@ -32,7 +33,7 @@ class SemaObservation:
         else:
             d = self.fso - img_pose_feat
             dtheta = self.fso % img_pose_feat
-            if d < self.FEAT_DIST_THS and self.n < self.Nf and dtheta < self.ORIENT_DIFF_THS:
+            if d < self.FEAT_DIST_THS and self.n < self.Nf and dtheta < np.deg2rad(self.ORIENT_DIFF_THS):
                 self.fso = self.fso + img_pose_feat
                 self.n += 1
 
@@ -81,7 +82,6 @@ class TSM:
         self.nodes = []
     
     def show_TSM(self):
-        print("tms data")
         for i in range(len(self.nodes)):
             print(self.nodes[i])
         for i in range(len(self.edges)):
@@ -151,7 +151,9 @@ class TSM:
                 self.__connect_nen(new_node, m_last)
             
             else:
-                m_last_tmp = m_last + fso
+#                 m_last_tmp = m_last + fso
+                m_last_tmp = fso
+                
                 m_last.copy(m_last_tmp)
                 m_last.d = fso.d        # 修正边长为最新fso的累计边长
                 
@@ -160,10 +162,26 @@ class TSM:
         """
         node_start = self.nodes[0]
         m_last = self.edges[-1]
-        edge_end = self.nodes[-1]
-        self.__connect_nen(edge_end, m_last, node_start)
-    
-    
+        m_last.theta = self.edges[0].theta
+        node_end = self.nodes[-1]
+        self.__connect_nen(node_end, m_last, node_start)
+        
+        # 重新计算每条边的角度（不知前面角度合并有什么问题）
+        # 直接使用前后两个节点的角度作为边的角度(更符合常理一些)
+        for i in range(len(self.edges)):
+            e = self.edges[i]
+            n0 = self.nodes[e.starting_node_id]
+            n1 = self.nodes[e.ending_node_id]
+            dx = n1.x - n0.x
+            dy = n1.y - n0.y
+            n = np.sqrt(dx**2 + dy**2)
+            dx /= n
+            dy /= n
+            theta = np.arccos(dy)
+            if dx < 0:
+                theta *= -1
+            e.theta = theta
+            
     def random_edge(self):
         """ 根据以建好后的TSM，随机返回一个边的id
         """
@@ -177,17 +195,25 @@ def main():
     feature_lst = load_feature_npy(r"dataset/ts_seq1_feature.npy")
 
     tsm = TSM()
-    sov = SemaObservation()
+    sov = SemaObservation(5,0.2, 10)
     for t in range(len(feature_lst)):
         Ft = feature_lst[t]
-        fso = sov.input(Ft)
-        tsm.mapping(fso)
+        fso, nfuse = sov.input(Ft)
+        tsm.mapping(fso, nfuse)
     tsm.close_looping()
-    
-    plotTSM(tsm)
 
-    
-    
+
+    feature_loc = load_feature_npy(r"dataset/ts_seq1_feature.npy")
+    for t in range(len(feature_loc)):
+        z = feature_loc[t]
+        d_s = []
+        for i in range(len(tsm.edges)):
+            e = tsm.edges[i]
+            d_s.append(e-z)
+        d_s = np.array(d_s)
+        y = d_s.argsort()
+        print(y[:10])
+    plotTSM(tsm)
 if __name__=="__main__":
     pass
     main()
