@@ -22,13 +22,8 @@ def main():
         Ft = feature_tsm[t]
         fso, nfuse = sov.input(Ft)
         gtsm.mapping(fso, nfuse)
-    
-    d_sum = 0
-    for i in range(len(gtsm.edges)):
-        d_sum += gtsm.edges[i].d
-    print(d_sum)
-    gtsm.close_looping()
 
+    gtsm.close_looping()
 #     gtsm.show_TSM()
 #     plotTSM(gtsm)
     
@@ -37,11 +32,11 @@ def main():
     
     myrobot = Vehile(len(gtsm.edges))
 #     myrobot.set_noise(0.3)
-#     for t in range(len(feature_loc)):
-#         Ft = feature_loc[t]
-#         Z = myrobot.sense(Ft)
-#         forward_distance = Z.d
-#         myrobot.move(forward_distance, gtsm)
+    for t in range(len(feature_loc)):
+        Ft = feature_loc[t]
+        Z = myrobot.sense(Ft)
+        forward_distance = Z.d
+        myrobot.move(forward_distance, gtsm)
 
 
     
